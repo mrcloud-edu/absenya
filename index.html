@@ -1,69 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    :root { --hijau-masjid: #15803d; }
-    body { background-color: #f0fdf4; font-family: 'Segoe UI', sans-serif; }
-    .navbar { background: var(--hijau-masjid); color: white; border-bottom: 4px solid #166534; }
-    .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); background: white; }
-    .nav-pills .nav-link { color: var(--hijau-masjid); font-weight: 600; border-radius: 10px; }
-    .nav-pills .nav-link.active { background-color: var(--hijau-masjid); }
-    #reader { border-radius: 15px; overflow: hidden; border: 2px solid #ddd !important; }
-    .status-msg { min-height: 80px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-    .stat-box { background: #f8fafc; border-radius: 15px; padding: 15px; border-left: 5px solid var(--hijau-masjid); }
+    :root { --hijau: #15803d; }
+    body { background-color: #f0fdf4; font-family: sans-serif; }
+    .nav-pills .nav-link.active { background-color: var(--hijau); }
+    #reader { border-radius: 15px; overflow: hidden; border: 3px solid var(--hijau) !important; }
+    #result { min-height: 70px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite;}
+    @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0);} 40% { color: #333; text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0);} 60% { text-shadow: .25em 0 0 #333, .5em 0 0 rgba(0,0,0,0);} 80%, 100% { text-shadow: .25em 0 0 #333, .5em 0 0 #333;}}
   </style>
 </head>
 <body>
 
-<nav class="navbar mb-4 py-3">
-  <div class="container text-center">
-    <h4 class="fw-bold mb-0">🕌 PRESENSI SHOLAT DZUHUR</h4>
-    <small>Masjid Sekolah - SMK Unggul</small>
+<div class="container py-3" style="max-width: 500px;">
+  <div class="text-center mb-4 p-3 bg-white shadow-sm rounded-4">
+    <h4 class="fw-bold text-success mb-0">🕌 ABSENSI MASJID</h4>
+    <small class="text-muted">Tempelkan QR Code ke Kamera</small>
   </div>
-</nav>
 
-<div class="container pb-5">
-  <ul class="nav nav-pills mb-4 justify-content-center bg-white p-2 rounded-pill shadow-sm mx-auto" style="max-width: 350px;">
-    <li class="nav-item flex-fill"><button class="nav-link w-100 active" data-bs-toggle="pill" data-bs-target="#tab-scan">📸 Scan</button></li>
-    <li class="nav-item flex-fill"><button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#tab-dash">📊 Dashboard</button></li>
+  <ul class="nav nav-pills mb-3 justify-content-center bg-white p-2 rounded-pill shadow-sm">
+    <li class="nav-item flex-fill"><button class="nav-link w-100 active" data-bs-toggle="pill" data-bs-target="#scan">Scanner</button></li>
+    <li class="nav-item flex-fill"><button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#dash">Siswa</button></li>
   </ul>
 
-  <div class="tab-content mx-auto" style="max-width: 450px;">
-    <div class="tab-pane fade show active" id="tab-scan">
-      <div class="card main-card p-3 text-center">
-        <div id="reader" class="mb-3"></div>
-        <div id="result" class="status-msg rounded-3 bg-light border p-3 fw-bold text-muted">
-          Siap Memindai...
-        </div>
-      </div>
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="scan">
+      <div id="reader" class="shadow-sm"></div>
+      <div id="result" class="mt-3 p-3 bg-white rounded-3 shadow-sm border text-center">Menunggu Scan...</div>
     </div>
 
-    <div class="tab-pane fade" id="tab-dash">
-      <div class="card main-card p-4">
-        <label class="form-label fw-bold">Cek Progres Ibadah</label>
-        <div class="input-group mb-4">
-          <input type="text" id="idInput" class="form-control" placeholder="Masukkan ID Siswa...">
-          <button class="btn btn-success" onclick="cekDashboard()">Cari</button>
+    <div class="tab-pane fade" id="dash">
+      <div class="card border-0 shadow-sm p-4 rounded-4">
+        <div class="input-group mb-3">
+          <input type="text" id="idIn" class="form-control" placeholder="ID Siswa...">
+          <button class="btn btn-success" onclick="cari()">Cari</button>
         </div>
-        
-        <div id="dashResult" style="display:none;">
-          <h5 id="dispNama" class="fw-bold text-center border-bottom pb-2"></h5>
-          <div class="row g-2 mt-2">
-            <div class="col-6">
-              <div class="stat-box text-center">
-                <small class="text-muted">Total Hadir</small>
-                <h2 id="dispHadir" class="fw-bold mb-0">0</h2>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="stat-box text-center">
-                <small class="text-muted">Progres</small>
-                <h2 id="dispPersen" class="fw-bold mb-0 text-success">0%</h2>
-              </div>
-            </div>
+        <div id="resDash" style="display:none;" class="text-center">
+          <h5 id="n" class="fw-bold"></h5>
+          <div class="row mt-3">
+            <div class="col-6 bg-light p-3 rounded-start border-end">Hadir: <h3 id="h" class="mb-0">0</h3></div>
+            <div class="col-6 bg-light p-3 rounded-end">Progres: <h3 id="p" class="mb-0 text-success">0%</h3></div>
           </div>
         </div>
       </div>
@@ -72,34 +52,51 @@
 </div>
 
 <script>
-  let scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-  
-  function onScanSuccess(decodedText) {
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerHTML = "Memproses...";
-    
-    // Suara 'Beep' sederhana (Opsional)
-    try { new Audio('https://www.soundjay.com/buttons/beep-07.wav').play(); } catch(e){}
+  let html5QrcodeScanner;
+  let isProcessing = false;
 
-    google.script.run.withSuccessHandler(res => {
-      resultDiv.className = res.status === 'success' ? 'status-msg p-3 rounded-3 bg-success-subtle text-success border-success fw-bold' : 'status-msg p-3 rounded-3 bg-danger-subtle text-danger border-danger fw-bold';
-      resultDiv.innerText = res.pesan;
+  function onScanSuccess(decodedText) {
+    if (isProcessing) return; // Mencegah double trigger saat memproses
+    isProcessing = true;
+
+    const res = document.getElementById('result');
+    res.innerHTML = '<span class="loading-dots">Memproses</span>';
+    res.className = "mt-3 p-3 bg-warning-subtle text-warning-emphasis rounded-3 shadow-sm border text-center";
+
+    google.script.run.withSuccessHandler(data => {
+      res.innerText = data.pesan;
+      res.className = data.status === 'success' ? "mt-3 p-3 bg-success text-white rounded-3 shadow-sm text-center" : "mt-3 p-3 bg-danger text-white rounded-3 shadow-sm text-center";
+      
+      // Reset scanner setelah 1.5 detik (lebih cepat dari sebelumnya)
+      setTimeout(() => { 
+        isProcessing = false;
+        res.innerText = "Siap Scan Berikutnya...";
+        res.className = "mt-3 p-3 bg-white text-muted rounded-3 shadow-sm border text-center";
+      }, 1500);
     }).prosesAbsen(decodedText);
   }
 
-  scanner.render(onScanSuccess);
-
-  function cekDashboard() {
-    let id = document.getElementById('idInput').value;
-    google.script.run.withSuccessHandler(data => {
-      if(data) {
-        document.getElementById('dashResult').style.display = 'block';
-        document.getElementById('dispNama').innerText = data.nama;
-        document.getElementById('dispHadir').innerText = data.hadir;
-        document.getElementById('dispPersen').innerText = data.persen + "%";
-      } else { alert("Data tidak ditemukan"); }
-    }).getStatsSiswa(id);
+  function start() {
+    html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+      fps: 25, // Frame rate tinggi agar deteksi instan
+      qrbox: {width: 250, height: 250},
+      aspectRatio: 1.0
+    });
+    html5QrcodeScanner.render(onScanSuccess);
   }
+
+  function cari() {
+    google.script.run.withSuccessHandler(d => {
+      if(d){
+        document.getElementById('resDash').style.display = 'block';
+        document.getElementById('n').innerText = d.nama;
+        document.getElementById('h').innerText = d.hadir;
+        document.getElementById('p').innerText = d.persen + "%";
+      } else { alert("Data Kosong"); }
+    }).getStatsSiswa(document.getElementById('idIn').value);
+  }
+
+  window.onload = start;
 </script>
 </body>
 </html>
