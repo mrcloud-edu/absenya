@@ -6,48 +6,41 @@
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body { background-color: #f0fdf4; font-family: sans-serif; }
-    .header { background: #15803d; color: white; padding: 15px 0; border-radius: 0 0 20px 20px; }
-    #reader { border-radius: 15px; overflow: hidden; border: 2px solid #15803d !important; }
-    .status-area { min-height: 80px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 10px; }
+    .header { background: #15803d; color: white; padding: 20px 0; border-radius: 0 0 25px 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    #reader { border-radius: 20px; overflow: hidden; border: 4px solid white !important; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .status-area { min-height: 90px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; margin-top: 20px; }
+    .bg-ready { background: white; color: #666; border: 1px solid #ddd; }
+    .bg-success-custom { background: #22c55e !important; color: white !important; }
     .nav-pills .nav-link.active { background-color: #15803d; }
   </style>
 </head>
 <body>
 
-<div class="header text-center mb-3">
-  <h5 class="fw-bold mb-0 text-uppercase">🕌 Absensi Dzuhur Masjid</h5>
+<div class="header text-center mb-4">
+  <h4 class="fw-bold mb-0 text-uppercase">🕌 ABSENSI MASJID SMK</h4>
+  <small>Scan QR Code untuk Absen Dzuhur</small>
 </div>
 
 <div class="container" style="max-width: 450px;">
   <ul class="nav nav-pills mb-3 justify-content-center p-1 bg-white rounded-pill shadow-sm">
-    <li class="nav-item flex-fill">
-      <button class="nav-link w-100 active" data-bs-toggle="pill" data-bs-target="#tab-scan">📸 SCAN</button>
-    </li>
-    <li class="nav-item flex-fill">
-      <button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#tab-dash">📊 DATA</button>
-    </li>
+    <li class="nav-item flex-fill"><button class="nav-link w-100 active" data-bs-toggle="pill" data-bs-target="#tab-scan">📸 SCANNER</button></li>
+    <li class="nav-item flex-fill"><button class="nav-link w-100" data-bs-toggle="pill" data-bs-target="#tab-dash">📊 DATA SISWA</button></li>
   </ul>
 
   <div class="tab-content">
     <div class="tab-pane fade show active" id="tab-scan">
       <div id="reader"></div>
-      <div id="statusBox" class="status-area bg-white border mt-3 text-muted shadow-sm">
-         SIAP PINDAI...
-      </div>
+      <div id="statusBox" class="status-area bg-ready shadow-sm">SIAP PINDAI...</div>
     </div>
 
     <div class="tab-pane fade" id="tab-dash">
       <div class="card border-0 shadow-sm p-4 rounded-4 text-center">
-        <div class="mb-3">
-          <input type="text" id="idInputan" class="form-control" placeholder="Masukkan ID Siswa...">
-        </div>
-        <button class="btn btn-success w-100 mb-3" onclick="ambilDataSiswa()">Tampilkan Progres</button>
-        
-        <div id="hasilDash" class="p-3 border rounded-3" style="display:none;">
-           <h6 id="namaSiswaTxt" class="fw-bold text-dark"></h6>
-           <hr>
-           <p class="mb-0 text-muted">Total Hadir Dzuhur:</p>
-           <h1 id="hadirSiswaTxt" class="display-3 fw-bold text-success">0</h1>
+        <input type="text" id="idInputan" class="form-control mb-3" placeholder="Masukkan ID Siswa...">
+        <button class="btn btn-success w-100 mb-3" onclick="cekDashboard()">Cek Progres</button>
+        <div id="hasilDash" style="display:none;" class="p-3 border rounded-3">
+           <h5 id="namaS" class="fw-bold"></h5>
+           <h1 id="hadirS" class="display-3 fw-bold text-success">0</h1>
+           <p class="text-muted">Total Kehadiran</p>
         </div>
       </div>
     </div>
@@ -56,50 +49,40 @@
 
 <script>
   let scanner;
-  let sedangProses = false;
+  let processing = false;
 
-  // FUNGSI SCAN
   function onScanSuccess(decodedText) {
-    if (sedangProses) return;
-    sedangProses = true;
+    if (processing) return;
+    processing = true;
 
     const box = document.getElementById('statusBox');
-    box.innerText = "MENGIRIM: " + decodedText;
-    box.className = "status-area bg-warning text-dark mt-3 shadow-sm";
+    box.innerText = "MEMPROSES...";
+    box.className = "status-area bg-warning text-dark shadow-sm";
 
     google.script.run.withSuccessHandler(res => {
       if(res.status === 'success') {
-        box.innerText = "BERHASIL: " + decodedText;
-        box.className = "status-area bg-success text-white mt-3 shadow-sm";
+        box.innerText = res.pesan;
+        box.className = "status-area bg-success-custom shadow-sm";
       } else {
-        box.innerText = "GAGAL: " + res.pesan;
-        box.className = "status-area bg-danger text-white mt-3 shadow-sm";
+        box.innerText = res.pesan;
+        box.className = "status-area bg-danger text-white shadow-sm";
       }
-      
       setTimeout(() => {
         box.innerText = "SIAP PINDAI...";
-        box.className = "status-area bg-white border mt-3 text-muted shadow-sm";
-        sedangProses = false;
-      }, 1500);
+        box.className = "status-area bg-ready shadow-sm";
+        processing = false;
+      }, 2000);
     }).prosesAbsen(decodedText);
   }
 
-  // FUNGSI TOMBOL DASHBOARD (Sudah Diperbaiki)
-  function ambilDataSiswa() {
+  function cekDashboard() {
     const id = document.getElementById('idInputan').value;
-    const hasil = document.getElementById('hasilDash');
-    
-    if(!id) { alert("Isi ID dulu!"); return; }
-
     google.script.run.withSuccessHandler(d => {
-      if(d) {
-        hasil.style.display = 'block';
-        document.getElementById('namaSiswaTxt').innerText = "Halo, " + d.nama;
-        document.getElementById('hadirSiswaTxt').innerText = d.hadir;
-      } else {
-        alert("ID Siswa tidak ditemukan atau belum pernah absen.");
-        hasil.style.display = 'none';
-      }
+      if(d){
+        document.getElementById('hasilDash').style.display = 'block';
+        document.getElementById('namaS').innerText = d.nama;
+        document.getElementById('hadirS').innerText = d.hadir;
+      } else { alert("Data tidak ditemukan"); }
     }).getStatsSiswa(id);
   }
 
